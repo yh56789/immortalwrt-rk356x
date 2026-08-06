@@ -1,0 +1,46 @@
+# Build artifacts
+bin/
+build_dir/
+staging_dir/
+dl/
+tmp/
+
+# Config files
+.config
+.config.old
+.config*
+
+# Feeds (managed by feeds.conf)
+feeds/
+
+# Logs
+*.log
+logs/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor files
+*.swp
+*.swo
+*~
+.vscode/
+.idea/
+
+# Signing keys (sensitive)
+key-build*
+
+# Compile temp files
+*.o
+*.a
+*.so
+scripts/config/*.o
+scripts/config/lxdialog/*.o
+
+# Kernel build
+*.ko
+*.mod
+*.mod.c
+Module.symvers
+modules.order
