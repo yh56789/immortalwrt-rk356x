@@ -1,0 +1,113 @@
+name: Build ImmortalWrt Firmware
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+    inputs:
+      build_type:
+        description: 'Build type'
+        required: true
+        default: 'full'
+        type: choice
+        options:
+          - full
+          - packages-only
+
+env:
+  BUILD_DIR: /home/runner/work/immortalwrt-rk356x/immortalwrt
+  CCACHE_DIR: /home/runner/work/immortalwrt-rk356x/ccache
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 360
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        path: immortalwrt
+        fetch-depth: 0
+
+    - name: Setup build environment
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y build-essential clang flex bison g++ gawk gcc-multilib g++-multilib gettext git libncurses5-dev libssl-dev python3-distutils rsync unzip zlib1g-dev file wget libelf-dev python3-setuptools python3-dev swig time xsltproc libxml2-utils libexpat1-dev libgmp-dev libmpc-dev libmpfr-dev libreadline-dev libsqlite3-dev libtool-bin libusb-1.0-0-dev libzstd-dev make patch perl pkg-config python3-yaml squashfs-tools subversion texinfo xmlto ccache cmake ninja-build meson golang-go nodejs npm
+
+    - name: Setup ccache
+      uses: actions/cache@v3
+      with:
+        path: ${{ env.CCACHE_DIR }}
+        key: ccache-${{ github.sha }}
+        restore-keys: |
+          ccache-
+
+    - name: Update feeds
+      working-directory: ${{ env.BUILD_DIR }}
+      run: |
+        ./scripts/feeds update -a
+        ./scripts/feeds install -a
+
+    - name: Apply golang upgrade patch
+      working-directory: ${{ env.BUILD_DIR }}
+      run: |
+        if [ -f patches/golang-1.26.5-upgrade.patch ]; then
+          cd feeds/packages
+          git apply ../../patches/golang-1.26.5-upgrade.patch
+          echo "Golang patch applied successfully"
+        else
+          echo "Warning: golang patch not found"
+        fi
+
+    - name: Import build configuration
+      working-directory: ${{ env.BUILD_DIR }}
+      run: |
+        if [ -f g68_mtk_wifi.config ]; then
+          cp g68_mtk_wifi.config .config
+          echo "Using g68_mtk_wifi.config"
+        elif [ -f .config ]; then
+          echo "Using existing .config"
+        else
+          echo "Error: No configuration file found"
+          exit 1
+        fi
+        make defconfig
+
+    - name: Download sources
+      working-directory: ${{ env.BUILD_DIR }}
+      run: |
+        make download -j$(nproc)
+        find dl -size -1024c -exec rm -f {} \;
+
+    - name: Build firmware
+      working-directory: ${{ env.BUILD_DIR }}
+      run: |
+        make -j$(nproc) || make -j1 V=s
+
+    - name: Organize artifacts
+      working-directory: ${{ env.BUILD_DIR }}
+      run: |
+        mkdir -p ../artifacts
+        cp -r bin/targets/rockchip/armv8/* ../artifacts/ 2>/dev/null || true
+        cp -r bin/packages/aarch64_generic/luci/daed_*.ipk ../artifacts/ 2>/dev/null || true
+        cp .config ../artifacts/build.config 2>/dev/null || true
+        echo "Build completed at $(date)" > ../artifacts/build-info.txt
+        echo "Commit: ${{ github.sha }}" >> ../artifacts/build-info.txt
+
+    - name: Upload firmware artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: immortalwrt-firmware-${{ github.sha }}
+        path: /home/runner/work/immortalwrt-rk356x/artifacts/
+        retention-days: 30
+
+    - name: Upload build logs on failure
+      if: failure()
+      uses: actions/upload-artifact@v3
+      with:
+        name: build-logs-${{ github.sha }}
+        path: |
+          ${{ env.BUILD_DIR }}/logs/
+          ${{ env.BUILD_DIR }}/tmp/
+        retention-days: 7
