@@ -71,6 +71,17 @@ jobs:
           echo "Warning: luci-app-daed deps fix patch not found"
         fi
 
+    - name: Apply rust downgrade patch
+      working-directory: ${{ env.BUILD_DIR }}
+      run: |
+        if [ -f patches/rust-downgrade-1.89.patch ]; then
+          cd feeds/packages
+          git apply ../../patches/rust-downgrade-1.89.patch
+          echo "Rust downgrade patch applied successfully"
+        else
+          echo "Warning: rust downgrade patch not found"
+        fi
+
     - name: Import build configuration
       working-directory: ${{ env.BUILD_DIR }}
       run: |
