@@ -1,6 +1,9 @@
+diff --git a/applications/luci-app-daed/Makefile b/applications/luci-app-daed/Makefile
+index 10958da..6c6972d 100644
 --- a/applications/luci-app-daed/Makefile
 +++ b/applications/luci-app-daed/Makefile
-@@ -6,7 +6,7 @@ include $(TOPDIR)/rules.mk
+@@ -5,7 +5,7 @@
+ include $(TOPDIR)/rules.mk
  
  LUCI_TITLE:=LuCI app for dae dashboard
 -LUCI_DEPENDS:=+daed +daed-geoip +daed-geosite
