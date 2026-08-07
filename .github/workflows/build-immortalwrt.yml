@@ -1,8 +1,8 @@
 name: Build ImmortalWrt Firmware
 
 on:
-  push:
-    branches: [ main ]
+  #push:
+  #  branches: [ main ]
   workflow_dispatch:
     inputs:
       build_type:
