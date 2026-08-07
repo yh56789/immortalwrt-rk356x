@@ -91,6 +91,12 @@ jobs:
         make download -j$(nproc)
         find dl -size -1024c -exec rm -f {} \;
 
+    - name: Clean build directory
+      working-directory: ${{ env.BUILD_DIR }}
+      run: |
+        make clean
+        rm -rf build_dir/target-aarch64_generic_musl/host/rustc-*
+
     - name: Build firmware
       working-directory: ${{ env.BUILD_DIR }}
       run: |
