@@ -46,6 +46,9 @@ jobs:
     - name: Update feeds
       working-directory: ${{ env.BUILD_DIR }}
       run: |
+        git clone https://github.com/QiuSimons/luci-app-daed package/feeds/dae
+        git clone https://github.com/kenzok8/openwrt-daede package/feeds/daede
+        git clone https://github.com/EasyTier/luci-app-easytier package/feeds/easytier
         ./scripts/feeds update -a
         ./scripts/feeds install -a
 
