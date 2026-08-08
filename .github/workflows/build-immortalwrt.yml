@@ -33,7 +33,21 @@ jobs:
     - name: Setup build environment
       run: |
         sudo apt-get update
-        sudo apt-get install -y build-essential clang flex bison g++ gawk gcc-multilib g++-multilib gettext git libncurses5-dev libssl-dev python3-distutils rsync unzip zlib1g-dev file wget libelf-dev python3-setuptools python3-dev swig time xsltproc libxml2-utils libexpat1-dev libgmp-dev libmpc-dev libmpfr-dev libreadline-dev libsqlite3-dev libtool-bin libusb-1.0-0-dev libzstd-dev make patch perl pkg-config python3-yaml squashfs-tools subversion texinfo xmlto ccache cmake ninja-build meson golang-go nodejs npm python3-pyelftools
+        sudo apt-get install -y build-essential flex bison g++ gawk gcc-multilib g++-multilib gettext git libncurses5-dev libssl-dev python3-distutils rsync unzip zlib1g-dev file wget libelf-dev python3-setuptools python3-dev swig time xsltproc libxml2-utils libexpat1-dev libgmp-dev libmpc-dev libmpfr-dev libreadline-dev libsqlite3-dev libtool-bin libusb-1.0-0-dev libzstd-dev make patch perl pkg-config python3-yaml squashfs-tools subversion texinfo xmlto ccache cmake ninja-build meson golang-go nodejs npm python3-pyelftools lsb-release wget software-properties-common gnupg
+    - name: Install LLVM 17 for eBPF compilation
+      run: |
+        wget https://apt.llvm.org/llvm.sh
+        chmod +x llvm.sh
+        sudo ./llvm.sh 17
+        sudo apt-get install -y clang-17 llvm-17 lld-17
+        sudo update-alternatives --install /usr/bin/clang clang /usr/bin/clang-17 100
+        sudo update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-17 100
+        sudo update-alternatives --install /usr/bin/llvm-strip llvm-strip /usr/bin/llvm-strip-17 100
+        sudo update-alternatives --install /usr/bin/llc llc /usr/bin/llc-17 100
+        sudo update-alternatives --install /usr/bin/opt opt /usr/bin/opt-17 100
+        sudo update-alternatives --install /usr/bin/llvm-dis llvm-dis /usr/bin/llvm-dis-17 100
+        clang --version
+        llvm-strip --version
 
     - name: Setup ccache
       uses: actions/cache@v4
